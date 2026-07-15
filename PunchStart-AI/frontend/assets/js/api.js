@@ -1,32 +1,35 @@
-const API_BASE_URL = 'https://startpunch-2.onrender.com';
-async function apiRequest(endpoint, method = 'GET', body = null) {
-    const token = localStorage.getItem('auth_token');
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) headers.Authorization = `Bearer ${token}`;
+const API_BASE_URL = 'https://startpunch-1.onrender.com';
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 60000);
+async function apiRequest(endpoint, method = 'GET', body = null) {
+    const headers = { 'Content-Type': 'application/json' };
 
     try {
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             method,
             headers,
             body: body ? JSON.stringify(body) : null,
-            signal: controller.signal
         });
 
+        // Get raw text for better debugging
+        const text = await response.text();
+        console.log("Raw Response from", endpoint, ":", text);
+
         if (!response.ok) {
-            const payload = await response.json().catch(() => ({}));
-            throw new Error(payload.detail || 'The request could not be completed.');
+            throw new Error(`HTTP ${response.status}: ${text.substring(0, 200)}`);
         }
-        return response.json();
+
+        // Parse JSON
+        if (!text) {
+            throw new Error("Empty response from server");
+        }
+        
+        return JSON.parse(text);
     } catch (error) {
-        if (error.name === 'AbortError') {
-            throw new Error('The analysis is taking longer than expected. Please try again.');
+        console.error("API Error:", error);
+        if (error.message.includes('Failed to fetch')) {
+            throw new Error('Cannot connect to backend. Is the backend running?');
         }
-        throw new Error(error.message || 'The request could not be completed.');
-    } finally {
-        clearTimeout(timeout);
+        throw error;
     }
 }
 
