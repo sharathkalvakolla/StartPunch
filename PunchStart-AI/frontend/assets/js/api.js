@@ -1,5 +1,4 @@
-const API_BASE_URL = 'https://startpunch-production.up.railway.app';
-
+const API_BASE_URL = 'https://startpunch-2.onrender.com';
 async function apiRequest(endpoint, method = 'GET', body = null) {
     const token = localStorage.getItem('auth_token');
     const headers = { 'Content-Type': 'application/json' };
